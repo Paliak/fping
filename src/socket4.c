@@ -62,9 +62,18 @@ int open_ping_socket_ipv4(int *socktype)
     struct protoent* proto;
     int s;
 
-    /* confirm that ICMP is available on this machine */
-    if ((proto = getprotobyname("icmp")) == NULL)
-        crash_and_burn("icmp: unknown protocol");
+	/* confirm that ICMP is available on this machine */
+	#if defined(__ANDROID__) || defined(ANDROID)
+		/* Android does not implement getprotobyname */
+		proto = &(struct protoent){
+			.p_name    = "icmp",
+			.p_aliases = (char *[]) { NULL },
+			.p_proto   = 1
+		};
+	#else
+		if ((proto = getprotobyname("icmp")) == NULL)
+			crash_and_burn("icmp: unknown protocol");
+	#endif
 
     /* create raw socket for ICMP calls (ping) */
     *socktype = SOCK_RAW;
