@@ -60,12 +60,17 @@ int open_ping_socket_ipv6(int *socktype)
     int s = -1;
     int p_proto = IPPROTO_ICMPV6;
 
-#if defined(USE_GETPROTOBYNAME) && !(defined(ANDROID) || defined(__ANDROID__))
-	/* confirm that ICMP6 is available on this machine */
-	if (getprotobyname("ipv6-icmp") == NULL ) {
-		crash_and_burn("ipv6-icmp: unknown protocol");
-	}
+#ifdef USE_GETPROTOBYNAME
+    {
+        /* confirm that ICMP6 is available on this machine */
+        struct protoent* proto = getprotobyname("ipv6-icmp");
+        if (proto == NULL) {
+            crash_and_burn("ipv6-icmp: unknown protocol");
+        }
+        p_proto = proto->p_proto;
+    }
 #endif
+
 
     /* create raw socket for ICMP6 calls (ping) */
     *socktype = SOCK_RAW;
